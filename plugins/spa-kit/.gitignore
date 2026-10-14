@@ -1,0 +1,23 @@
+node_modules/
+.next/
+out/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# tool output
+test-results/
+playwright-report/
+blob-report/
+.playwright/
+tools/e2e/test-results/
+tools/seo/reports/
+.evidence/
+
+# env & local
+.env
+.env.*
+!.env.example
+.DS_Store
+*.log
