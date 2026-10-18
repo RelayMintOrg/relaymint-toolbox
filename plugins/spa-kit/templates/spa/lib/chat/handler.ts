@@ -125,6 +125,18 @@ function parseMessages(raw: string, env: ChatEnv): Parsed {
   return messages[messages.length - 1]?.role === "user" ? { ok: true, messages } : invalid;
 }
 
+/**
+ * What an operator needs to diagnose a failing provider, and nothing else: the
+ * error's kind, the provider's HTTP status and whether it was a timeout. Never
+ * the message (a provider can echo our request in it), the key, or any body.
+ */
+function describeFailure(err: unknown): string {
+  const name = err instanceof Error ? err.name : "NonError";
+  if (name === "TimeoutError" || name === "AbortError") return "timed out";
+  const status = err instanceof Error ? /^provider answered HTTP (\d{3})$/.exec(err.message)?.[1] : undefined;
+  return status ? `HTTP ${status}` : name;
+}
+
 function clientKey(request: Request, env: ChatEnv): string {
   const header = request.headers.get(env.clientIpHeader);
   if (!header) return "unknown";
@@ -151,7 +163,13 @@ export function createChatHandler(deps: ChatDeps): (request: Request) => Promise
     const type = request.headers.get("content-type") ?? "";
     if (!/^application\/json\b/i.test(type)) return fail(415, "unsupported_media_type");
 
-    const raw = await readLimited(request, env.maxBodyBytes);
+    let raw: string | null;
+    try {
+      raw = await readLimited(request, env.maxBodyBytes);
+    } catch {
+      // The client went away mid-upload. Keep the answer inside the error contract.
+      return fail(400, "invalid_request");
+    }
     if (raw === null) return fail(413, "payload_too_large");
 
     const parsed = parseMessages(raw, env);
@@ -169,10 +187,8 @@ export function createChatHandler(deps: ChatDeps): (request: Request) => Promise
       const text = reply.replace(CONTROL_CHARS, "").trim().slice(0, MAX_REPLY_CHARS);
       if (text === "") return fail(502, "upstream_error");
       return respond(200, { reply: leaksInstructions(text, system.secrets) ? WITHHELD_REPLY : text });
-    } catch {
-      // Deliberately silent about why: the cause can include the provider's
-      // response, which can include our request. Operators read server logs.
-      console.error(`[chat] provider "${provider.name}" failed`);
+    } catch (err) {
+      console.error(`[chat] provider "${provider.name}" failed: ${describeFailure(err)}`);
       return fail(502, "upstream_error");
     }
   };

@@ -76,10 +76,36 @@ test("anything but POST is refused with 405 and Allow: POST", async () => {
 
 // --------------------------------------------------------------- input size
 
-test("a body over the size cap is refused with 413 without being parsed", async () => {
-  const { handler } = setup();
-  const res = await handler(post(`{"messages":[{"role":"user","content":"${"a".repeat(200_000)}"}]}`));
+test("a body over the size cap is refused with 413 before it is parsed", async () => {
+  const { handler, env } = setup();
+  // Not valid JSON and not an oversized message: only the byte cap can produce a 413 here.
+  const res = await handler(post("x".repeat(env.maxBodyBytes + 1)));
   assert.equal(res.status, 413);
+});
+
+test("a declared content-length over the cap is refused without touching the body", async () => {
+  const { handler, env } = setup();
+  let touched = false;
+  const request = {
+    method: "POST",
+    headers: new Headers({ "content-type": "application/json", "content-length": String(env.maxBodyBytes + 1), "x-forwarded-for": "7.7.7.7" }),
+    get body() {
+      touched = true;
+      return null;
+    },
+  };
+  const res = await handler(request);
+  assert.equal(res.status, 413);
+  assert.equal(touched, false);
+});
+
+test("a client that disconnects mid-upload gets the error contract, not an exception", async () => {
+  const { handler } = setup();
+  const body = new ReadableStream({ pull(controller) { controller.error(new Error("socket hang up")); } });
+  const res = await handler(
+    new Request("http://site.test/api/chat", { method: "POST", headers: { "content-type": "application/json" }, body, duplex: "half" }),
+  );
+  assert.equal(res.status, 400);
 });
 
 test("an over-long body with no declared length is still cut off (streamed)", async () => {
@@ -255,11 +281,12 @@ test("an unconfigured assistant answers 503 after the cheap checks, never a stac
   assert.equal((await handler(post("nope"))).status, 400, "validation still runs first");
 });
 
-test("a failing provider is a 502 that leaks nothing of the cause", async () => {
+test("a failing provider is a 502 that leaks nothing of the cause to the client or the log", async () => {
   const provider = { name: "boom", complete: () => Promise.reject(new Error("upstream said: sk-secret-key and the prompt")) };
   const { handler } = setup({ provider });
+  const logged = [];
   const originalError = console.error;
-  console.error = () => {};
+  console.error = (...args) => logged.push(args.join(" "));
   try {
     const res = await handler(ask("hi"));
     assert.equal(res.status, 502);
@@ -267,6 +294,25 @@ test("a failing provider is a 502 that leaks nothing of the cause", async () => 
   } finally {
     console.error = originalError;
   }
+  assert.equal(logged.length, 1);
+  assert.match(logged[0], /provider "boom" failed: Error/, "the operator learns the kind of failure");
+  assert.doesNotMatch(logged[0], /sk-secret|prompt/, "but never the message");
+});
+
+test("the operator log says which HTTP status the provider returned, and when it timed out", async () => {
+  const logs = [];
+  const originalError = console.error;
+  console.error = (...args) => logs.push(args.join(" "));
+  try {
+    const http = chatCompletionsProvider({ baseUrl: "https://x.test", apiKey: "k", model: "m" }, async () => new Response("secret body", { status: 401 }));
+    await setup({ provider: http }).handler(ask("hi"));
+    await setup({ provider: { name: "t", complete: () => Promise.reject(Object.assign(new Error("x"), { name: "TimeoutError" })) } }).handler(ask("hi"));
+  } finally {
+    console.error = originalError;
+  }
+  assert.match(logs[0], /HTTP 401/);
+  assert.match(logs[1], /timed out/);
+  assert.ok(logs.every((l) => !/secret body/.test(l)));
 });
 
 test("an empty reply from the provider is a 502, not an empty bubble", async () => {

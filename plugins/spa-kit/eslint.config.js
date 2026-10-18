@@ -34,6 +34,7 @@ export default tseslint.config(
         AbortSignal: "readonly",
         TextEncoder: "readonly",
         ReadableStream: "readonly",
+        Headers: "readonly",
       },
     },
   },

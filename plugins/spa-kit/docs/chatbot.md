@@ -37,6 +37,14 @@ The origin must be `https` (plain `http` is accepted only for `localhost`).
 The site exposes no chat endpoint of its own with this backend: `/api/chat`
 answers 404, and the breaker contract asserts it.
 
+This skin is best-effort, and the kit cannot prove it: it selects the embed's own
+launcher and frame (`#relaymint-widget-root > button` and `> div`), which is how
+RelayMint's embed is observed to be built but is not a published styling contract,
+and the widget runs in its own document where no oracle here can see it. If RelayMint
+changes that markup the launcher and frame silently stop taking the skin (the
+accent still applies, because it is passed as a data attribute). The kit's own
+check is against a stand-in for the widget, not the real one.
+
 What the skin does here: it styles the launcher and the frame's outer box
 (border, corners, shadow) and passes the brand accent, derived from the palette,
 to the embed. It cannot restyle the conversation inside RelayMint's frame.
@@ -59,7 +67,7 @@ Everything is server-side and read at run time from environment variables
 | `CHAT_BASE_URL` | | Base URL of the provider, e.g. `https://llm.example.com/v1`. Must be `https` (`http` only for `localhost`) |
 | `CHAT_MODEL` | | Model name sent to the provider |
 | `CHAT_API_KEY` | | Sent to the provider in an `Authorization` header. Never in the browser, never in a response |
-| `CHAT_MAX_INPUT_CHARS` | `800` | Longest visitor message. Longer is refused with 413 |
+| `CHAT_MAX_INPUT_CHARS` | `800` | Longest visitor message the server accepts; longer is refused with 413. The widget stops typing at `maxInputChars` in `chat.config.ts` (also 800). If you change one, change the other, or the visitor sees the "too long" reply instead of a stopped keystroke |
 | `CHAT_MAX_OUTPUT_TOKENS` | `400` | Cap on the reply |
 | `CHAT_TIMEOUT_MS` | `20000` | Provider call timeout |
 | `CHAT_RATE_LIMIT_MAX` | `20` | Requests per client address per window |

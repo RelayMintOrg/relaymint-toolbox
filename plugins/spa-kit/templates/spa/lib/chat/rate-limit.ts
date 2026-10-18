@@ -24,11 +24,18 @@ interface Options {
 export function createRateLimiter({ max, windowMs, maxKeys = 5000, now = Date.now }: Options): RateLimiter {
   const windows = new Map<string, { start: number; count: number }>();
 
-  function sweep(at: number): void {
-    for (const [key, entry] of windows) {
-      if (at - entry.start >= windowMs) windows.delete(key);
+  let lastSweep = now();
+
+  /** Makes room for one more key. Never scans more than once per window. */
+  function makeRoom(at: number): void {
+    if (at - lastSweep >= windowMs) {
+      lastSweep = at;
+      for (const [key, entry] of windows) {
+        if (at - entry.start >= windowMs) windows.delete(key);
+      }
     }
-    // Still full of live windows: drop the oldest, which are closest to expiring.
+    // Still full of live windows: Map keeps insertion order and window starts only
+    // grow, so the first key is the oldest and closest to expiring. O(1).
     while (windows.size >= maxKeys) {
       const oldest = windows.keys().next();
       if (oldest.done) break;
@@ -45,7 +52,7 @@ export function createRateLimiter({ max, windowMs, maxKeys = 5000, now = Date.no
         entry = undefined;
       }
       if (!entry) {
-        if (windows.size >= maxKeys) sweep(at);
+        if (windows.size >= maxKeys) makeRoom(at);
         entry = { start: at, count: 0 };
         windows.set(key, entry);
       }
