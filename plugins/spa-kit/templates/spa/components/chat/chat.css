@@ -1,0 +1,367 @@
+/*
+ * Chat widget: structure shared by every skin.
+ *
+ * Rules this file and the skins obey (the kit's own tests enforce them):
+ *  - colours come from the --kit-* tokens only, never a literal;
+ *  - durations and easings come from --kit-dur-* / --kit-ease-* only, so the
+ *    reduced-motion contract and frozen screenshots hold with no extra work;
+ *  - a skin is a set of --chat-* variables plus a few rules scoped to
+ *    [data-chat-skin="<name>"]. It never changes the markup.
+ *
+ * The defaults below are the "minimal" skin, so a missing skin still renders.
+ */
+
+@import "./skins/minimal.css";
+@import "./skins/glass.css";
+@import "./skins/bubble.css";
+@import "./skins/terminal.css";
+
+.kit-chat {
+  --chat-font: var(--kit-font-sans);
+  --chat-fg: var(--kit-text-primary);
+  --chat-fg-secondary: var(--kit-text-secondary);
+  --chat-fg-muted: var(--kit-text-muted);
+  --chat-surface: var(--kit-abyss);
+  --chat-surface-raised: var(--kit-hull);
+  --chat-border: var(--kit-rim);
+  --chat-accent: var(--kit-signal);
+  --chat-radius: var(--kit-radius-md);
+  --chat-radius-inner: var(--kit-radius-sm);
+  --chat-launcher-radius: var(--kit-radius-md);
+  --chat-shadow: none;
+  --chat-backdrop: none;
+
+  position: fixed;
+  inset-block-end: 1rem;
+  inset-inline-end: 1rem;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.75rem;
+  max-width: calc(100vw - 2rem);
+  font-family: var(--chat-font);
+  color: var(--chat-fg);
+}
+
+/* ---------------------------------------------------------------- launcher */
+
+.kit-chat__launcher {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0 1rem;
+  font: inherit;
+  font-size: 0.875rem;
+  color: var(--chat-fg);
+  background: var(--chat-surface);
+  border: var(--kit-hairline) solid var(--chat-border);
+  border-radius: var(--chat-launcher-radius);
+  box-shadow: var(--chat-shadow);
+  -webkit-backdrop-filter: var(--chat-backdrop);
+  backdrop-filter: var(--chat-backdrop);
+  cursor: pointer;
+  transition:
+    background-color var(--kit-dur-fast) var(--kit-ease-glide),
+    border-color var(--kit-dur-fast) var(--kit-ease-glide),
+    transform var(--kit-dur-fast) var(--kit-ease-glide);
+}
+
+.kit-chat__launcher:hover {
+  border-color: var(--chat-accent);
+}
+
+.kit-chat__launcher:active {
+  transform: translateY(1px);
+}
+
+.kit-chat__launcher svg {
+  flex: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--chat-accent);
+}
+
+/* ------------------------------------------------------------------- panel */
+
+.kit-chat__panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto auto;
+  width: min(24rem, calc(100vw - 2rem));
+  height: min(34rem, calc(100dvh - 6.5rem));
+  overflow: hidden;
+  background: var(--chat-surface);
+  border: var(--kit-hairline) solid var(--chat-border);
+  border-radius: var(--chat-radius);
+  box-shadow: var(--chat-shadow);
+  -webkit-backdrop-filter: var(--chat-backdrop);
+  backdrop-filter: var(--chat-backdrop);
+  animation: kit-chat-in var(--kit-dur-base) var(--kit-ease-expo) both;
+}
+
+@keyframes kit-chat-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+}
+
+.kit-chat__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.5rem 0.5rem 1rem;
+  border-block-end: var(--kit-hairline) solid var(--chat-border);
+}
+
+.kit-chat__title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--chat-fg);
+}
+
+.kit-chat__close {
+  display: inline-grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  color: var(--chat-fg);
+  background: transparent;
+  border: var(--kit-hairline) solid transparent;
+  border-radius: var(--chat-radius-inner);
+  cursor: pointer;
+  transition:
+    background-color var(--kit-dur-fast) var(--kit-ease-glide),
+    border-color var(--kit-dur-fast) var(--kit-ease-glide);
+}
+
+.kit-chat__close:hover {
+  border-color: var(--chat-border);
+  background: var(--chat-surface-raised);
+}
+
+.kit-chat__close svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+/* --------------------------------------------------------------------- log */
+
+.kit-chat__log {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  padding: 1rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.kit-chat__msg {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  max-width: 88%;
+}
+
+.kit-chat__msg[data-role="user"] {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.kit-chat__who {
+  font-family: var(--kit-font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: var(--kit-tracking-label);
+  text-transform: uppercase;
+  color: var(--chat-fg-muted);
+}
+
+.kit-chat__bubble {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  color: var(--chat-fg);
+  background: var(--chat-surface-raised);
+  border: var(--kit-hairline) solid var(--chat-border);
+  border-radius: var(--chat-radius-inner);
+}
+
+.kit-chat__msg[data-role="assistant"] .kit-chat__bubble {
+  background: transparent;
+  border-color: transparent;
+  padding-inline: 0;
+}
+
+.kit-chat__msg[data-error] .kit-chat__bubble {
+  color: var(--kit-critical);
+}
+
+/* ------------------------------------------------------------------ status */
+
+.kit-chat__status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding-inline: 1rem;
+  font-size: 0.75rem;
+  color: var(--chat-fg-secondary);
+}
+
+.kit-chat__status:not(:empty) {
+  padding-block: 0.25rem;
+}
+
+.kit-chat__dots {
+  display: inline-flex;
+  gap: 0.25rem;
+}
+
+.kit-chat__dots i {
+  width: 0.375rem;
+  height: 0.375rem;
+  background: var(--chat-accent);
+  border-radius: 50%;
+  animation: kit-chat-pulse var(--kit-dur-cinematic) var(--kit-ease-glide) infinite;
+  animation-delay: calc(var(--kit-dur-fast) * var(--i, 0));
+}
+
+@keyframes kit-chat-pulse {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+/* -------------------------------------------------------------------- form */
+
+.kit-chat__form {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-block-start: var(--kit-hairline) solid var(--chat-border);
+}
+
+.kit-chat__input {
+  flex: 1;
+  min-width: 0;
+  min-height: 2.75rem;
+  padding: 0 0.75rem;
+  font: inherit;
+  font-size: 0.875rem;
+  color: var(--chat-fg);
+  background: var(--chat-surface-raised);
+  border: var(--kit-hairline) solid var(--chat-border);
+  border-radius: var(--chat-radius-inner);
+}
+
+.kit-chat__input::placeholder {
+  color: var(--chat-fg-secondary);
+  opacity: 1;
+}
+
+.kit-chat__send {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0 0.875rem;
+  font: inherit;
+  font-size: 0.875rem;
+  color: var(--chat-fg);
+  background: transparent;
+  border: var(--kit-hairline) solid var(--chat-accent);
+  border-radius: var(--chat-radius-inner);
+  cursor: pointer;
+  transition: background-color var(--kit-dur-fast) var(--kit-ease-glide);
+}
+
+.kit-chat__send:hover:not(:disabled) {
+  background: color-mix(in oklch, var(--chat-accent) 18%, transparent);
+}
+
+.kit-chat__send:disabled {
+  cursor: not-allowed;
+  border-color: var(--chat-border);
+  color: var(--chat-fg-secondary);
+}
+
+.kit-chat__input:focus-visible,
+.kit-chat__send:focus-visible,
+.kit-chat__close:focus-visible {
+  outline-offset: -2px;
+}
+
+.kit-chat__note {
+  margin: 0;
+  padding: 0 1rem 0.75rem;
+  font-size: 0.6875rem;
+  line-height: 1.4;
+  color: var(--chat-fg-muted);
+}
+
+/* ---------------------------------------------------- RelayMint embed skin */
+
+/*
+ * With the RelayMint backend the conversation runs inside RelayMint's own
+ * frame, which this site cannot restyle. What it can reach is the launcher
+ * and the frame's outer box, so the skin carries over to those. RelayMint sets
+ * its geometry inline, hence !important on the properties the skin owns.
+ */
+html[data-chat-skin] #relaymint-widget-root > button {
+  border: var(--kit-hairline) solid var(--chat-border) !important;
+  border-radius: var(--chat-launcher-radius) !important;
+  box-shadow: var(--chat-shadow) !important;
+  -webkit-backdrop-filter: var(--chat-backdrop);
+  backdrop-filter: var(--chat-backdrop);
+}
+
+html[data-chat-skin] #relaymint-widget-root > div {
+  border: var(--kit-hairline) solid var(--chat-border) !important;
+  border-radius: var(--chat-radius) !important;
+  box-shadow: var(--chat-shadow) !important;
+  overflow: hidden !important;
+}
+
+/* ----------------------------------------------------------- reduced motion */
+
+/*
+ * The two-way motion contract. Durations already collapse to zero through the
+ * tokens; this also stops the looping indicators, which a zero duration alone
+ * would not, and keeps `data-motion="frozen"` screenshots still.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .kit-chat,
+  .kit-chat *,
+  .kit-chat *::before,
+  .kit-chat *::after {
+    animation: none;
+    transition: none;
+  }
+}
+
+:root[data-motion="frozen"] .kit-chat,
+:root[data-motion="frozen"] .kit-chat *,
+:root[data-motion="frozen"] .kit-chat *::before,
+:root[data-motion="frozen"] .kit-chat *::after {
+  animation: none;
+  transition: none;
+}
+
+.kit-chat__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}

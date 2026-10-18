@@ -26,6 +26,12 @@ import {
 } from "./lib/brief.mjs";
 import { toHex } from "./lib/color.mjs";
 import {
+  BACKENDS,
+  SKINS,
+  renderChatConfigModule,
+  withChatInvariants,
+} from "./lib/chatbot.mjs";
+import {
   computeVerdict,
   exitCodeFor,
   classifyDependencies,
@@ -117,6 +123,7 @@ async function cmdNew(positional, flags) {
       brand: { color: String(flags.brand ?? "#2ee6d6"), mode: String(flags.mode ?? "dark") },
       hero: { headline: String(flags.headline ?? flags.name ?? basename(dir)) },
       sections: [],
+      ...chatbotFromFlags(flags),
     });
   }
 
@@ -302,6 +309,20 @@ async function cmdDoctor(_positional, flags) {
 // ------------------------------------------------------------------- brief
 
 /**
+ * `--chatbot=<backend> [--skin=<skin>]` is the shorthand for a flag-built site.
+ * Validation is the brief's own, so a bad value gets the same message either way.
+ */
+function chatbotFromFlags(flags) {
+  if (flags.chatbot === undefined && flags.skin === undefined) return {};
+  return {
+    chatbot: {
+      ...(flags.chatbot === undefined ? {} : { backend: String(flags.chatbot) }),
+      ...(flags.skin === undefined ? {} : { skin: String(flags.skin) }),
+    },
+  };
+}
+
+/**
  * Writes everything derived from the brief: the token ramp, the content module
  * and the site metadata. Re-runnable, so editing brief.json and re-applying is
  * the normal way to iterate.
@@ -316,6 +337,18 @@ async function applyBrief(dir, brief) {
 
   await writeFile(join(dir, "content.ts"), renderContentModule(brief));
   await writeFile(join(dir, "lib", "site.ts"), renderSiteModule(brief));
+  await writeFile(join(dir, "chat.config.ts"), renderChatConfigModule(brief, toHex(tokens.signal)));
+
+  // The chat route's invariants follow the backend. Only the `chat.*` entries
+  // are managed here; anything else in the contract is the project's own.
+  const contractPath = join(dir, "contract.json");
+  if (existsSync(contractPath)) {
+    const contract = JSON.parse(await readFile(contractPath, "utf8"));
+    const next = withChatInvariants(contract, brief.chatbot?.backend);
+    if (JSON.stringify(next) !== JSON.stringify(contract)) {
+      await writeFile(contractPath, `${JSON.stringify(next, null, 2)}\n`);
+    }
+  }
 
   // Light mode needs the document to say so, or the browser paints dark chrome.
   const layoutPath = join(dir, "app", "layout.tsx");
@@ -339,10 +372,26 @@ async function cmdApply(positional, flags) {
   const briefPath = flags.brief ? resolve(String(flags.brief)) : join(dir, "brief.json");
   if (!existsSync(briefPath)) throw new UsageError(`no brief at ${briefPath}`);
 
-  const brief = normaliseBrief(JSON.parse(await readFile(briefPath, "utf8")));
+  const raw = JSON.parse(await readFile(briefPath, "utf8"));
+
+  // `apply --skin=glass` is the quick way to re-skin: it edits the brief, which
+  // stays the source of truth, then applies it like any other change.
+  const override = {};
+  if (flags.skin !== undefined) override.skin = String(flags.skin);
+  if (flags.backend !== undefined) override.backend = String(flags.backend);
+  if (Object.keys(override).length > 0) {
+    if (!raw.chatbot && override.backend === undefined) {
+      throw new UsageError(
+        `this brief has no chatbot, so there is no skin to change. Add one with --backend=<${Object.keys(BACKENDS).join("|")}> --skin=<${Object.keys(SKINS).join("|")}>`,
+      );
+    }
+    raw.chatbot = { ...(raw.chatbot ?? {}), ...override };
+  }
+
+  const brief = normaliseBrief(raw);
   const { report } = await applyBrief(dir, brief);
 
-  if (briefPath !== join(dir, "brief.json")) {
+  if (briefPath !== join(dir, "brief.json") || Object.keys(override).length > 0) {
     await writeFile(join(dir, "brief.json"), `${JSON.stringify(brief, null, 2)}\n`);
   }
 
@@ -352,6 +401,7 @@ async function cmdApply(positional, flags) {
     mode: report.mode,
     contrast: report.contrast,
     contrastTargetsMet: report.meetsTargets,
+    chatbot: brief.chatbot ? { backend: brief.chatbot.backend, skin: brief.chatbot.skin } : null,
     ...(brief.warnings.length > 0 ? { warnings: brief.warnings } : {}),
   };
 }
@@ -386,7 +436,21 @@ async function cmdVerify(positional, flags) {
   }
 
   // Start the built app ourselves so every oracle sees the same origin.
-  const server = spawn("npm", ["start"], { cwd: dir, stdio: "ignore", detached: true });
+  //
+  // The built-in chatbot answers through the deterministic fake provider here,
+  // so verification never needs a key and never calls a real model. The limit is
+  // raised only so the oracles' own requests cannot trip it.
+  const server = spawn("npm", ["start"], {
+    cwd: dir,
+    stdio: "ignore",
+    detached: true,
+    env: {
+      ...process.env,
+      CHAT_PROVIDER: "fake",
+      CHAT_ALLOW_FAKE: "1",
+      CHAT_RATE_LIMIT_MAX: "1000",
+    },
+  });
   try {
     if (!(await waitForHttp(base))) {
       record("server", 1, `no response from ${base} within 120s`);
@@ -490,9 +554,11 @@ const USAGE = `spa-kit — generate and verify client SPAs
   spa-kit new <dir> --name="Acme" --url=https://example.com [--brand=#0A5FFF]
                     [--mode=dark|light] [--headline="..."] [--description="..."]
                     [--locale=en_US] [--port=4400] [--install=false] [--force]
+                    [--chatbot=builtin|relaymint] [--skin=minimal|glass|bubble|terminal]
 
   spa-kit brief                      print a brief template to stdout
-  spa-kit apply <dir> [--brief=...]  re-apply the brief: palette, content, metadata
+  spa-kit apply <dir> [--brief=...]  re-apply the brief: palette, content, metadata, chatbot
+                    [--skin=...] [--backend=...]   change the chatbot in brief.json, then apply
 
   spa-kit verify <dir> [--base=http://localhost:PORT] [--skip-build] [--skip-e2e]
 
@@ -552,6 +618,7 @@ async function main() {
       else {
         process.stdout.write(
           `applied brief to ${result.dir}\n  brand ${result.brand} (${result.mode})\n` +
+            `  chat  ${result.chatbot ? `${result.chatbot.backend} · ${result.chatbot.skin}` : "none"}\n` +
             `  contrast ${result.contrastTargetsMet ? "targets met" : "TARGETS MISSED"}\n`,
         );
         for (const [pair, ratio] of Object.entries(result.contrast)) {

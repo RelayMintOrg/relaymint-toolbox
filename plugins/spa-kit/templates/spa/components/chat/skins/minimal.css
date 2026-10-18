@@ -1,0 +1,16 @@
+/*
+ * minimal: flat and quiet. Hairline border, small corners, no shadow and no
+ * blur, so it disappears into any page.
+ */
+.kit-chat[data-chat-skin="minimal"],
+html[data-chat-skin="minimal"] {
+  --chat-font: var(--kit-font-sans);
+  --chat-surface: var(--kit-abyss);
+  --chat-surface-raised: var(--kit-hull);
+  --chat-border: var(--kit-rim);
+  --chat-radius: var(--kit-radius-md);
+  --chat-radius-inner: var(--kit-radius-sm);
+  --chat-launcher-radius: var(--kit-radius-md);
+  --chat-shadow: none;
+  --chat-backdrop: none;
+}

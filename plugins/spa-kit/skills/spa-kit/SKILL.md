@@ -76,6 +76,43 @@ first. Typical set:
   sector (e.g. for a clinic: servicios, tiempos de respuesta, precios,
   equipo médico).
 
+## Step 2b — Chatbot (backend and skin)
+
+A second `AskUserQuestion` call, because it is an independent decision and the
+first call is already full. Ask it in the user's language.
+
+**Question 1 — ¿Quiere un chatbot en la web?** Recommend the option that fits what
+the user said about the client; "No" is the default when they did not mention it.
+
+- **No** — the site has no chatbot (omit `chatbot` from the brief).
+- **Widget de RelayMint** (`relaymint`) — the site embeds the RelayMint chat
+  widget with the business's public widget key. Answers, booking and leads are
+  handled by RelayMint. Recommend it when the client needs appointments or lead
+  capture.
+- **Chatbot integrado, código abierto** (`builtin`) — lives in the site; a server
+  route calls an LLM through a provider-agnostic interface (configured by env
+  vars) and answers only from the site's own content. It cannot book, send or save
+  anything. Recommend it when the client only needs questions answered.
+
+**Question 2, only if they want one — ¿Qué apariencia?** Always show all four
+with their description; the skin is independent of the backend, so every skin
+works with either:
+
+- **minimal** — flat and quiet: hairline border, small corners, no shadow.
+  Disappears into the page.
+- **glass** — frosted panel: translucent surface with a backdrop blur and a rim of
+  emitted light.
+- **bubble** — friendly messenger: a round launcher, a large rounded panel and
+  speech-bubble messages.
+- **terminal** — monospace console: square corners, prompt markers and a block
+  cursor.
+
+Suggest one that suits the brand and mode (for example `minimal` for legal or
+healthcare, `glass` for premium or tech, `bubble` for retail or hospitality,
+`terminal` for developer tools) and put it first. Both answers go into the brief
+as `chatbot: { "backend": "...", "skin": "..." }`. Do not invent a skin name: the
+CLI rejects anything but the four above and says which are valid.
+
 ## Step 3 — Draft the brief
 
 Write the full brief yourself:
@@ -89,8 +126,11 @@ Write the full brief yourself:
 - `nav`: one item per section, anchors matching the section ids.
 - `footer.note`: `© <name>` plus anything the user mentioned (city, registry).
 
+- `chatbot`: only if they chose one in step 2b.
+
 Then show the user a compact summary — headline, the section titles, brand
-colour, language — and ask for corrections before generating. Not the raw JSON
+colour, language, and the chatbot (backend and skin) if any — and ask for
+corrections before generating. Not the raw JSON
 unless they ask.
 
 ## Step 4 — Generate
@@ -108,7 +148,8 @@ Keep the brief inside the generated project (`spa-kit new` copies it to
 `brief.json` there).
 
 If the site already exists, edit its `brief.json` and run `apply <dir>` followed
-by `verify <dir>` instead.
+by `verify <dir>` instead. To change only the chatbot's look later:
+`$SPA_KIT apply <dir> --skin=<minimal|glass|bubble|terminal>`, then `verify`.
 
 ## Step 5 — Fix and report
 
@@ -120,9 +161,21 @@ If `verify` fails, read the failing oracle's output and fix the cause:
 | `seo` html-lang | `business.locale` does not match the language the content is written in |
 | `contrast targets MISSED` | brand colour too dark or too light for the chosen mode — try the other mode, or adjust the hex with the user |
 | `e2e` a11y | usually a hand-edit in `app/`, not the brief |
+| `e2e` chatbot (a11y, motion, visual) | a hand-edit in `components/chat/`; a skin must stay on tokens |
+| `breaker` `chat.*` | a hand-edit in `lib/chat/` or `app/api/chat/` that weakened a refusal |
 
 Report at the end, briefly: the path, the dev command and port, the verify
-verdict, and the brand colour with its contrast ratios. Then offer the two
+verdict, and the brand colour with its contrast ratios. If the site has a chatbot,
+also say what the user must configure before it works in production, and that
+verification used a fake provider and no real model:
+
+- `relaymint`: `NEXT_PUBLIC_RELAYMINT_WIDGET_ORIGIN` and
+  `NEXT_PUBLIC_RELAYMINT_WIDGET_KEY` (public, inlined at build time).
+- `builtin`: `CHAT_PROVIDER`, `CHAT_BASE_URL`, `CHAT_MODEL` and `CHAT_API_KEY` on
+  the server only, never in the repository. Without them the widget says the
+  assistant is unavailable.
+
+Full list in `docs/chatbot.md`. Then offer the two
 obvious next steps — editing content in `app/page.tsx`, or deploying.
 
 ## What this skill does not do

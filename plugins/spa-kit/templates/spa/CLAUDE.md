@@ -38,5 +38,11 @@ spa-kit verify .     # build + SEO/AEO oracles + blind breaker + end-to-end suit
 - New indexable route: create it under `app/`, then add it to
   `lib/site.ts` (`indexableRoutes`) and to `spa-kit.json`, and add an invariant
   to `contract.json`.
+- Chatbot: `chat.config.ts` is generated from the brief (`chatbot`); change the
+  skin with `spa-kit apply . --skin=<name>`. The widget is `components/chat/`
+  (skins in `components/chat/skins/`, tokens only), the endpoint is
+  `app/api/chat/route.ts` over `lib/chat/`. It must stay out of the server HTML,
+  must never claim an action it cannot take, and its keys are server-side env vars
+  (see `.env.example`). Never put a key in client code.
 - The decorative WebGL backdrop is `components/shader-field.tsx`. It is
   deliberately deferred to idle time and marked `data-visual-volatile`.

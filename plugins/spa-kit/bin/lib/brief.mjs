@@ -1,3 +1,5 @@
+import { normaliseChatbot } from "./chatbot.mjs";
+
 /**
  * The brief: the single declarative input that decides what a client site looks
  * like and says. Same brief in, same site out — which is what makes generation
@@ -37,6 +39,10 @@ export const BRIEF_EXAMPLE = {
   ],
   footer: { note: "© Example Robotics" },
   routes: ["/"],
+  // Optional. Omit "chatbot" for a site without one.
+  //   backend: "builtin" | "relaymint"
+  //   skin:    "minimal" | "glass" | "bubble" | "terminal"
+  chatbot: { backend: "builtin", skin: "minimal" },
 };
 
 /**
@@ -111,6 +117,11 @@ export function normaliseBrief(raw) {
     footer: { note: raw.footer?.note ?? `© ${business.name}`, links: raw.footer?.links ?? [] },
     routes: raw.routes ?? ["/"],
   };
+
+  // Absent stays absent (not null), so a brief without a chatbot normalises to
+  // exactly what it did before this key existed.
+  const chatbot = normaliseChatbot(raw.chatbot);
+  if (chatbot) brief.chatbot = chatbot;
 
   // The SEO probe requires 300+ characters of visible prose in the raw HTML.
   // Catch it here, where the fix is editing the brief, rather than three steps

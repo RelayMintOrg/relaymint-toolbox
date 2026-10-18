@@ -5,6 +5,7 @@ import { jsonLdScript, organizationSchema, websiteSchema } from "@/lib/seo/jsonl
 import { site } from "@/lib/site.ts";
 import { SiteHeader } from "@/components/site-header.tsx";
 import { SiteFooter } from "@/components/site-footer.tsx";
+import { ChatMount } from "@/components/chat/chat-mount.tsx";
 import "./globals.css";
 
 export const metadata: Metadata = pageMetadata({
@@ -36,6 +37,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <SiteHeader name={site.name} />
         {children}
         <SiteFooter />
+        {/* Client-only and deferred: nothing of the chatbot is in the server HTML. */}
+        <ChatMount />
       </body>
     </html>
   );

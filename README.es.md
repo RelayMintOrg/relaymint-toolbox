@@ -21,7 +21,7 @@ En Claude Code:
 
 | Plugin | Qué hace |
 |---|---|
-| [**spa-kit**](plugins/spa-kit) | Crea la web de un cliente a partir de una entrevista breve: un sitio Next.js independiente que pueden leer los buscadores **y** los motores de respuesta de IA (GPTBot, ClaudeBot, PerplexityBot), con una paleta de marca derivada de un solo color. Después verifica el sitio con tres comprobaciones independientes: una sonda de rastreo sin JavaScript, un "breaker" ciego que solo ve el contrato y la URL en vivo, y una batería de Playwright (regresión visual, accesibilidad WCAG 2.2, movimiento reducido y web vitals). Empieza con `/spa-kit`. |
+| [**spa-kit**](plugins/spa-kit) | Crea la web de un cliente a partir de una entrevista breve: un sitio Next.js independiente que pueden leer los buscadores **y** los motores de respuesta de IA (GPTBot, ClaudeBot, PerplexityBot), con una paleta de marca derivada de un solo color y un chatbot opcional en una de cuatro apariencias. Después verifica el sitio con tres comprobaciones independientes: una sonda de rastreo sin JavaScript, un "breaker" ciego que solo ve el contrato y la URL en vivo, y una batería de Playwright (regresión visual, accesibilidad WCAG 2.2, movimiento reducido y web vitals). Empieza con `/spa-kit`. |
 
 ## Licencia
 
