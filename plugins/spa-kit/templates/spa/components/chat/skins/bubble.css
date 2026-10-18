@@ -1,0 +1,59 @@
+/*
+ * bubble: a friendly messenger. A round launcher that shows only its icon, a
+ * large rounded panel, and speech-bubble messages whose corner nearest the
+ * speaker is squared off.
+ */
+.kit-chat[data-chat-skin="bubble"],
+html[data-chat-skin="bubble"] {
+  --chat-font: var(--kit-font-sans);
+  --chat-surface: var(--kit-void);
+  --chat-surface-raised: var(--kit-plate);
+  --chat-border: var(--kit-rim);
+  --chat-radius: calc(var(--kit-radius-lg) * 2);
+  --chat-radius-inner: calc(var(--kit-radius-lg) * 1.5);
+  --chat-launcher-radius: 50%;
+  --chat-shadow: var(--kit-glow-soft);
+  --chat-backdrop: none;
+}
+
+.kit-chat[data-chat-skin="bubble"] .kit-chat__launcher {
+  width: 3.5rem;
+  height: 3.5rem;
+  padding: 0;
+  border-color: var(--kit-signal);
+}
+
+.kit-chat[data-chat-skin="bubble"] .kit-chat__launcher svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* The accessible name stays; only the visible text goes, as the icon says it. */
+.kit-chat[data-chat-skin="bubble"] .kit-chat__launcher-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.kit-chat[data-chat-skin="bubble"] .kit-chat__msg[data-role="assistant"] .kit-chat__bubble {
+  padding: 0.625rem 0.875rem;
+  background: var(--kit-hull);
+  border-color: var(--kit-rim);
+  border-end-start-radius: var(--kit-radius-sm);
+}
+
+.kit-chat[data-chat-skin="bubble"] .kit-chat__msg[data-role="user"] .kit-chat__bubble {
+  padding: 0.625rem 0.875rem;
+  background: var(--kit-plate);
+  border-color: var(--kit-signal);
+  border-end-end-radius: var(--kit-radius-sm);
+}
+
+.kit-chat[data-chat-skin="bubble"] .kit-chat__input,
+.kit-chat[data-chat-skin="bubble"] .kit-chat__send {
+  border-radius: calc(var(--kit-radius-lg) * 2);
+  padding-inline: 1rem;
+}

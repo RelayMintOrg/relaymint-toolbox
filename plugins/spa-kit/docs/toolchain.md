@@ -9,7 +9,7 @@ no command behind it, treat the guarantee as unverified.
 | ---- | ---------- |
 | `templates/spa` | What a client receives. The single source for generated sites. |
 | `bin/` | The CLI: new, apply, verify, list, brief, doctor, plus the pure logic it decides with. |
-| `tests/` | 56 unit tests on node:test, and the self-test's brief. |
+| `tests/` | Unit tests on node:test (brief, palette, chatbot schema, chat route, skins, breaker vectors), and the self-test's brief. |
 | `tools/e2e` | Playwright: smoke, visual regression, accessibility, motion contract, web vitals. |
 | `tools/seo` | Executable SEO/AEO oracles. Exits non-zero on violation. |
 | `tools/breaker` | Blind breaker: contract + live URL in, typed verdict out. |
@@ -18,7 +18,7 @@ no command behind it, treat the guarantee as unverified.
 ## Commands
 
 ```bash
-npm run verify         # typecheck → lint → 56 unit tests → self-test
+npm run verify         # typecheck → lint → unit tests → self-test
 npm run self-test      # generate a site from the template and run every oracle
 npm test               # unit tests only
 npm run doctor         # is this installation able to run?

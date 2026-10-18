@@ -18,6 +18,13 @@ variants a happy-path test does not try: trailing-slash and case variants,
 and a request with no `Accept: text/html`. An invariant that only survives the
 happy path is reported as broken.
 
+An invariant may declare its own `request` (method, headers, body, and an
+optional `pad` that expands to an oversized payload) for routes that are not page
+fetches. It is then exercised exactly as declared, and also as an automated client.
+`contract.chat.example.json` is the contract for the built-in chatbot's route:
+wrong methods, malformed and oversized bodies, a forged `system` role, and a
+prompt-injection probe that must not return the instructions.
+
 Exit codes:
 
 | code | meaning |

@@ -43,7 +43,9 @@ proposes the brand colour, sections and copy, then generates and verifies the
 site. Installing the plugin installs the skill.
 
 It is instructed never to invent facts about a real business — prices, response
-times, certifications and the like are asked for or left out.
+times, certifications and the like are asked for or left out. It also asks whether
+the site should have a chatbot, which backend, and which of four skins, each shown
+with a short description.
 
 ## Generating client sites
 
@@ -82,9 +84,11 @@ npm run verify        # typecheck → lint → test → build → seo → e2e
 | E2E | Playwright: smoke, visual, a11y, motion, vitals | `npm run e2e` |
 | SEO / AEO | Indexability, structured data, no-JS crawler probe | `npm run seo` |
 | Verification | Blind breaker (contract + live URL only) | `npm run breaker -- --contract=…` |
+| Chatbot | Optional, per brief: RelayMint widget or built-in, in one of four skins | `spa-kit apply --skin=…` |
 
 ## Documentation
 
+- [`docs/chatbot.md`](docs/chatbot.md) — the optional chatbot: two backends, four skins, the env vars for each, and what is verified
 - [`docs/toolchain.md`](docs/toolchain.md) — every command, every pinned version and why
 - [`docs/seo-aeo.md`](docs/seo-aeo.md) — what the SEO/AEO oracles assert
 - [`docs/visual-and-motion.md`](docs/visual-and-motion.md) — the serious-sci-fi visual language and the motion contract
@@ -108,7 +112,7 @@ An unreachable target is `BREAKER_INCONCLUSIVE`, never a pass.
 ## Verifying the kit itself
 
 ```bash
-npm run verify      # typecheck + lint + 56 unit tests + self-test
+npm run verify      # typecheck + lint + unit tests + self-test
 npm run self-test   # generate a site from the template and run every oracle on it
 ```
 

@@ -40,5 +40,6 @@
     }
   ],
   "footer": { "note": "© Kit Self Test" },
-  "routes": ["/"]
+  "routes": ["/"],
+  "chatbot": { "backend": "builtin", "skin": "glass" }
 }

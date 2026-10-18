@@ -28,6 +28,12 @@ export default tseslint.config(
         URL: "readonly",
         setTimeout: "readonly",
         structuredClone: "readonly",
+        // Web-standard APIs the chat route tests build requests and responses with.
+        Request: "readonly",
+        Response: "readonly",
+        AbortSignal: "readonly",
+        TextEncoder: "readonly",
+        ReadableStream: "readonly",
       },
     },
   },

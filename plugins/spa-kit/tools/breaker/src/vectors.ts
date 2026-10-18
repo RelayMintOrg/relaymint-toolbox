@@ -10,7 +10,7 @@ import type { Invariant } from "./contract.ts";
 export interface Vector {
   name: string;
   rationale: string;
-  method: "GET" | "HEAD";
+  method: "GET" | "HEAD" | "DECLARED";
   transformRoute: (route: string) => string;
   headers: Record<string, string>;
   /** Vectors whose response body is not expected to be the document. */
@@ -71,6 +71,28 @@ export const vectors: readonly Vector[] = [
 ];
 
 /**
+ * Vectors for invariants that declare their own request. The request itself is
+ * sent as written (method, headers, body); these vary only the client.
+ */
+const requestVectors: readonly Vector[] = [
+  {
+    name: "declared-request",
+    rationale: "the request exactly as the contract describes it",
+    method: "DECLARED",
+    transformRoute: (r) => r,
+    headers: {},
+  },
+  {
+    name: "crawler-user-agent",
+    rationale:
+      "an automated client must be refused or answered by the same rules as a browser, never by a looser path",
+    method: "DECLARED",
+    transformRoute: (r) => r,
+    headers: { "user-agent": "Mozilla/5.0 (compatible; ExampleBot/1.0; +https://example.com/bot)" },
+  },
+];
+
+/**
  * Vectors applicable to an invariant.
  *
  * Two vectors are withheld where they would assert something untrue rather than
@@ -81,6 +103,11 @@ export const vectors: readonly Vector[] = [
  *    404 and demanding otherwise would be wrong.
  */
 export function vectorsFor(inv: Invariant): readonly Vector[] {
+  // An invariant that declares its own request is about that request, not about
+  // a page: the declared request is the baseline, and the only variation that
+  // makes sense is who is asking.
+  if (inv.request) return requestVectors;
+
   const needsBody =
     !!inv.expect.bodyIncludes?.length ||
     !!inv.expect.selectors?.length ||
@@ -88,7 +115,10 @@ export function vectorsFor(inv: Invariant): readonly Vector[] {
 
   const path = inv.route.split("?")[0] ?? inv.route;
   const isFileRoute = /\.[a-z0-9]+$/i.test(path);
-  const slashFlipApplies = path !== "/" && !isFileRoute;
+  // An API route has one address: a trailing-slash redirect on /api/x is the
+  // framework's normal behaviour and says nothing about the claim.
+  const isApiRoute = path.startsWith("/api/");
+  const slashFlipApplies = path !== "/" && !isFileRoute && !isApiRoute;
 
   return vectors.filter((v) => {
     if (needsBody && v.bodyless) return false;

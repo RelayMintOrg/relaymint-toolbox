@@ -24,6 +24,20 @@ in step, and reintroducing one is how this repository previously drifted.
 4. **Every guarantee has a command.** If you claim something holds, name the
    command that proves it and quote its output. An unverified claim is a defect.
 
+## The chatbot
+
+Optional per brief (`chatbot: { backend, skin }`; absent means none). The rules
+above apply to it unchanged, and they are the reason it is built the way it is:
+
+- It renders nothing on the server and is fetched after load (non-negotiable 1).
+- Skins are CSS built from the tokens only (non-negotiable 3):
+  `tests/skins.test.mjs` fails on a literal colour, duration or easing.
+- Its guarantees each name a command: `docs/chatbot.md` has the table.
+- The e2e suite exercises every skin by switching `data-chat-skin`, so a new skin
+  needs the registry, the type, the e2e list and the stylesheet to agree.
+- No test calls a real model. The only providers in tests are the template's
+  `fake` and a stubbed `fetch`.
+
 ## Order of work
 
 1. State the externally observable behaviour first — what a user or a crawler

@@ -51,7 +51,14 @@ async function runVector(
   let res: Response;
   let body = "";
   try {
-    res = await fetch(url, { method: vector.method, headers: vector.headers, redirect: "follow" });
+    const declared = vector.method === "DECLARED" ? inv.request : undefined;
+    const payload = declared?.body?.split("{{pad}}").join((declared.pad?.char ?? "").repeat(declared.pad?.length ?? 0));
+    res = await fetch(url, {
+      method: declared?.method ?? vector.method,
+      headers: { ...vector.headers, ...(declared?.headers ?? {}) },
+      ...(payload !== undefined ? { body: payload } : {}),
+      redirect: "follow",
+    });
     if (!vector.bodyless) body = await res.text();
   } catch (err) {
     return { ...seed, url, falsified: true, evidence: `request threw: ${String(err)}` };

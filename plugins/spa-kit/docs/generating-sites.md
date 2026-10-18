@@ -15,7 +15,8 @@ node bin/spa-kit.mjs new ~/Projects/clients/acme \
 ```
 
 Options: `--slug`, `--port`, `--description`, `--locale`, `--install=false`,
-`--force`, `--json`.
+`--force`, `--json`, and `--chatbot=builtin|relaymint` with `--skin=...` for a
+chatbot without writing a brief.
 
 The port is assigned automatically by scanning sibling projects for their
 `spa-kit.json`, so several client sites can run at once without colliding.
@@ -49,12 +50,17 @@ node bin/spa-kit.mjs new ~/Projects/clients/acme --brief=brief.json
   "hero":     { "headline", "subhead", "primary": {…}, "secondary": {…} },
   "sections": [{ "id", "label", "title", "body" }],
   "footer":   { "note", "links": [] },
-  "routes":   ["/"]
+  "routes":   ["/"],
+  "chatbot":  { "backend": "builtin" | "relaymint", "skin": "minimal" | "glass" | "bubble" | "terminal" }
 }
 ```
 
 Required: `business.name`, `business.description`, `business.url`,
-`brand.color`, `hero.headline`. Everything else has a default.
+`brand.color`, `hero.headline`. Everything else has a default. `chatbot` is
+optional: absent means no chatbot, and the site is exactly what it was before the
+key existed. Its values are validated, and an invalid one is rejected with the
+allowed values. See [`chatbot.md`](chatbot.md) for the backends, the skins and
+the environment variables each backend needs.
 
 Editing a brief afterwards and re-applying it is the normal way to iterate:
 
@@ -62,8 +68,15 @@ Editing a brief afterwards and re-applying it is the normal way to iterate:
 node bin/spa-kit.mjs apply ~/Projects/clients/acme
 ```
 
-`apply` rewrites `design/tokens.css`, `content.ts` and `lib/site.ts`. It does not
-touch anything you hand-wrote elsewhere.
+`apply` rewrites `design/tokens.css`, `content.ts`, `lib/site.ts` and
+`chat.config.ts`, and keeps the `chat.*` invariants of `contract.json` in step with
+the chatbot backend. It does not touch anything you hand-wrote elsewhere.
+
+To re-skin the chatbot without opening the brief:
+
+```bash
+node bin/spa-kit.mjs apply ~/Projects/clients/acme --skin=terminal
+```
 
 ### The palette is derived, not chosen
 
@@ -136,6 +149,7 @@ node bin/spa-kit.mjs list ~/Projects/clients
 | `lib/seo/` | Metadata and JSON-LD builders |
 | `design/` | Copied tokens and motion primitives. The client's brand lives here |
 | `components/` | `Reveal` and the deferred WebGL backdrop |
+| `components/chat/`, `lib/chat/`, `app/api/chat/`, `chat.config.ts` | The chatbot: widget, skins, server route and its logic, and the generated configuration. Inert unless the brief has a `chatbot` ([`chatbot.md`](chatbot.md)) |
 | `spa-kit.json` | Machine-readable project config the toolchain reads |
 | `contract.json` | The breaker's invariants for this site |
 | `CLAUDE.md` | Working rules for an agent editing this project |

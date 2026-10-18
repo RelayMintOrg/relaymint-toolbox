@@ -20,7 +20,7 @@ In Claude Code:
 
 | Plugin | What it does |
 |---|---|
-| [**spa-kit**](plugins/spa-kit) | Builds a client website from a short interview: a standalone Next.js site that search engines **and** AI answer engines (GPTBot, ClaudeBot, PerplexityBot) can read, with a brand palette derived from one color. Then it verifies the site with three independent checks: a no-JavaScript crawler probe, a blind "breaker" that only sees the contract and the live URL, and a Playwright suite (visual regression, WCAG 2.2 accessibility, reduced motion, web vitals). Run `/spa-kit` to start. |
+| [**spa-kit**](plugins/spa-kit) | Builds a client website from a short interview: a standalone Next.js site that search engines **and** AI answer engines (GPTBot, ClaudeBot, PerplexityBot) can read, with a brand palette derived from one color and an optional chatbot in one of four UI skins. Then it verifies the site with three independent checks: a no-JavaScript crawler probe, a blind "breaker" that only sees the contract and the live URL, and a Playwright suite (visual regression, WCAG 2.2 accessibility, reduced motion, web vitals). Run `/spa-kit` to start. |
 
 ## License
 

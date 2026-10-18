@@ -1,0 +1,36 @@
+/*
+ * glass: a frosted panel. A mostly opaque tinted surface (kept opaque enough
+ * that text contrast never depends on what is behind it), a backdrop blur, and
+ * a rim of emitted light instead of a drop shadow.
+ */
+.kit-chat[data-chat-skin="glass"],
+html[data-chat-skin="glass"] {
+  --chat-font: var(--kit-font-sans);
+  --chat-surface: color-mix(in oklch, var(--kit-abyss) 90%, transparent);
+  --chat-surface-raised: color-mix(in oklch, var(--kit-plate) 60%, transparent);
+  --chat-border: color-mix(in oklch, var(--kit-text-primary) 20%, transparent);
+  --chat-radius: var(--kit-radius-lg);
+  --chat-radius-inner: var(--kit-radius-md);
+  --chat-launcher-radius: var(--kit-radius-lg);
+  --chat-shadow: var(--kit-glow-soft), var(--kit-rim-light);
+  --chat-backdrop: blur(1rem) saturate(1.4);
+}
+
+/* A diagonal sheen from the top corner: what makes the surface read as glass. */
+.kit-chat[data-chat-skin="glass"] .kit-chat__panel,
+.kit-chat[data-chat-skin="glass"] .kit-chat__launcher {
+  background-image: linear-gradient(
+    135deg,
+    color-mix(in oklch, var(--kit-text-primary) 14%, transparent),
+    transparent 45%
+  );
+}
+
+.kit-chat[data-chat-skin="glass"] .kit-chat__panel {
+  box-shadow: var(--kit-glow-signal), var(--kit-rim-light);
+}
+
+.kit-chat[data-chat-skin="glass"] .kit-chat__launcher:hover,
+.kit-chat[data-chat-skin="glass"] .kit-chat__panel:focus-within {
+  box-shadow: var(--kit-glow-signal);
+}

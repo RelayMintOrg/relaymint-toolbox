@@ -1,0 +1,80 @@
+/*
+ * terminal: a monospace console. Square corners, a signal-coloured frame,
+ * prompt markers drawn with ::before (decorative, hidden from assistive
+ * technology by the empty alternative text) and a block cursor for "typing".
+ */
+.kit-chat[data-chat-skin="terminal"],
+html[data-chat-skin="terminal"] {
+  --chat-font: var(--kit-font-mono);
+  --chat-surface: var(--kit-void);
+  --chat-surface-raised: var(--kit-void);
+  --chat-border: var(--kit-signal-dim);
+  --chat-radius: 0;
+  --chat-radius-inner: 0;
+  --chat-launcher-radius: 0;
+  --chat-shadow: var(--kit-glow-soft);
+  --chat-backdrop: none;
+}
+
+.kit-chat[data-chat-skin="terminal"] .kit-chat__launcher::before {
+  content: ">_" / "";
+  color: var(--kit-signal);
+}
+
+.kit-chat[data-chat-skin="terminal"] .kit-chat__launcher svg {
+  display: none;
+}
+
+.kit-chat[data-chat-skin="terminal"] .kit-chat__title {
+  font-weight: 400;
+  text-transform: lowercase;
+}
+
+.kit-chat[data-chat-skin="terminal"] .kit-chat__msg {
+  max-width: 100%;
+  align-self: stretch;
+  align-items: stretch;
+}
+
+.kit-chat[data-chat-skin="terminal"] .kit-chat__msg .kit-chat__bubble {
+  padding: 0 0 0 2.5ch;
+  background: transparent;
+  border: 0;
+  position: relative;
+}
+
+.kit-chat[data-chat-skin="terminal"] .kit-chat__bubble::before {
+  position: absolute;
+  inset-inline-start: 0;
+  color: var(--kit-signal);
+}
+
+.kit-chat[data-chat-skin="terminal"] .kit-chat__msg[data-role="user"] .kit-chat__bubble::before {
+  content: ">" / "";
+}
+
+.kit-chat[data-chat-skin="terminal"] .kit-chat__msg[data-role="assistant"] .kit-chat__bubble::before {
+  content: "$" / "";
+}
+
+.kit-chat[data-chat-skin="terminal"] .kit-chat__who {
+  text-transform: lowercase;
+  letter-spacing: 0;
+}
+
+.kit-chat[data-chat-skin="terminal"] .kit-chat__dots i {
+  width: 0.625ch;
+  height: 1.1em;
+  border-radius: 0;
+}
+
+.kit-chat[data-chat-skin="terminal"] .kit-chat__input {
+  border-width: 0 0 var(--kit-hairline) 0;
+  padding-inline: 0;
+  caret-color: var(--kit-signal);
+}
+
+.kit-chat[data-chat-skin="terminal"] .kit-chat__send::before {
+  content: "$ " / "";
+  color: var(--kit-signal);
+}
